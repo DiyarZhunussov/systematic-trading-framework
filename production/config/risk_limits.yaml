@@ -1,0 +1,144 @@
+# risk_limits.yaml
+# HARD-CODED RISK LIMITS — never read from database, never modified at runtime
+# All changes require version control commit + human sign-off (Section 7.5)
+# Internal limits are set BELOW prop firm limits to provide a buffer for measurement lag
+
+# ─────────────────────────────────────────────────────────────────────────────
+# LEVEL 1: TRADE-LEVEL LIMITS
+# ─────────────────────────────────────────────────────────────────────────────
+trade:
+  max_risk_per_trade_pct: 0.005       # 0.5% of account at stop
+  max_stop_distance_atr_multiple: 1.5 # Wider stops get sized down
+  max_spread_multiple: 3.0            # Reject if spread > 3x baseline
+  slippage_budget_pips: 2.0           # Max acceptable slippage before rejection
+
+# ─────────────────────────────────────────────────────────────────────────────
+# LEVEL 2: STRATEGY-LEVEL LIMITS
+# ─────────────────────────────────────────────────────────────────────────────
+strategy:
+  max_daily_loss_pct: 0.015           # 1.5% per strategy per day
+  max_concurrent_trades: 3            # Per strategy
+  usd_net_exposure_max_pct: 0.03      # Max USD net across all USD pairs
+  equity_index_net_exposure_max_pct: 0.05  # Max same-direction index exposure
+
+  # Capital allocation caps until 12 months validated live trading
+  mean_reversion_max_risk_budget_pct: 0.15   # Section 3 (Engine 1)
+  breakout_max_risk_budget_pct: 0.10         # Section 3 (Engine 3)
+  stat_arb_allocation_pct: 0.00              # Zero until leg execution solved
+
+# ─────────────────────────────────────────────────────────────────────────────
+# LEVEL 3: PORTFOLIO-LEVEL LIMITS
+# ─────────────────────────────────────────────────────────────────────────────
+portfolio:
+  # Internal daily loss limit — 2x buffer below prop firm limit (typically 4-5%)
+  max_daily_loss_pct: 0.020           # 2.0% internal (vs ~5% prop firm)
+  max_weekly_loss_pct: 0.040          # 4.0%
+
+  # Drawdown triggers — internal limits below prop firm (typically 8-10%)
+  drawdown_review_trigger_pct: 0.060  # 6% → formal review
+  drawdown_suspension_trigger_pct: 0.080  # 8% → mandatory suspension
+  drawdown_hard_limit_pct: 0.100      # 10% → emergency close (prop firm typically ~10%)
+
+  # Drawdown duration monitoring
+  extended_drawdown_days: 10          # Drawdown > 3% for > 10 days → review
+  extended_drawdown_threshold_pct: 0.030
+
+  # Leverage
+  max_gross_leverage: 5.0             # 5:1 hard maximum
+  max_aggregate_strategy_scale: 1.0   # normalize_strategy_scales() enforces this
+
+  # Free margin
+  min_free_margin_pct: 0.30           # Maintain ≥ 30% free margin
+
+  # Tail risk
+  max_cvar_5pct_daily_pct: 0.030      # CVaR(95%) ≤ 3% of account per day
+
+# ─────────────────────────────────────────────────────────────────────────────
+# LEVEL 4: SYSTEM-LEVEL KILL SWITCH
+# ─────────────────────────────────────────────────────────────────────────────
+kill_switch:
+  daily_loss_trigger_pct: 0.030       # 3% daily loss → kill switch
+  drawdown_trigger_pct: 0.080         # 8% drawdown → kill switch
+  margin_level_trigger_pct: 150       # Margin level % below which kill fires
+  position_close_interval_seconds: 30 # Stagger between closes (market impact)
+  requires_manual_reset: true         # Human must authorize restart
+
+# ─────────────────────────────────────────────────────────────────────────────
+# VOLATILITY TARGETING
+# ─────────────────────────────────────────────────────────────────────────────
+volatility_target:
+  normal_annualised_pct: 0.100        # 10% annualised
+  high_vol_annualised_pct: 0.070      # 7% in high-vol regimes
+  crisis_annualised_pct: 0.040        # 4% in crisis
+  smoothing_ema_days: 3               # EMA to prevent position churn
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PROP FIRM REFERENCE (Phase 1 / Phase 2 typical values)
+# Internal limits are set materially below these
+# ─────────────────────────────────────────────────────────────────────────────
+prop_firm_reference:
+  phase1_max_drawdown_pct: 0.080
+  phase1_daily_loss_pct: 0.050
+  phase1_profit_target_pct: 0.100
+  phase2_max_drawdown_pct: 0.050
+  phase2_daily_loss_pct: 0.030
+  # RULE: Being close to a limit is NEVER justification for increasing risk
+  # The only correct response to approaching any limit is REDUCTION
+
+# ─────────────────────────────────────────────────────────────────────────────
+# FRACTIONAL KELLY
+# ─────────────────────────────────────────────────────────────────────────────
+kelly:
+  fraction: 0.25                      # 25% Kelly — ~35-45% of full-Kelly growth,
+                                      # ~80% variance reduction, >95% ruin reduction
+  min_fraction: 0.20
+  max_fraction: 0.40
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ALPHA DECAY MONITORING THRESHOLDS
+# ─────────────────────────────────────────────────────────────────────────────
+decay_monitor:
+  rolling_sharpe_warn_threshold: 0.50     # < 50% of historical → Condition A
+  rolling_ic_negative_days: 10            # IC < 0 for N days → Condition B
+  hostile_regime_days: 20                 # Hostile regime > N days → Condition C
+  slippage_deterioration_pct: 0.20        # > 20% above baseline → Condition D
+  cusum_alert_sigma: 3.0                  # CUSUM alert threshold (sigma multiples)
+
+  # Response: conditions active → action
+  response_1_condition_allocation_pct: 0.75
+  response_2_condition_allocation_pct: 0.50
+  response_3_condition_suspend: true
+  response_4plus_emergency_retire: true
+
+# ─────────────────────────────────────────────────────────────────────────────
+# HEARTBEAT SUPERVISION
+# ─────────────────────────────────────────────────────────────────────────────
+heartbeat:
+  timeout_seconds: 120                # Component silent for 2 min → alert
+  monitor_interval_seconds: 30
+  min_margin_level_pct: 200           # Below this → kill switch
+
+# ─────────────────────────────────────────────────────────────────────────────
+# DRAWDOWN RESPONSE SCHEDULE (Section 7.6)
+# ─────────────────────────────────────────────────────────────────────────────
+drawdown_response:
+  - threshold_pct: 0.03
+    scale_factor: 1.00
+    action: "normal"
+    reversible: true
+  - threshold_pct: 0.05
+    scale_factor: 0.75
+    action: "reduce_monitor"
+    reversible: true
+  - threshold_pct: 0.07
+    scale_factor: 0.50
+    action: "suspend_mean_rev"
+    reversible: false  # Requires review
+  - threshold_pct: 0.09
+    scale_factor: 0.25
+    action: "trend_only"
+    reversible: false  # Requires committee
+  - threshold_pct: 0.10
+    scale_factor: 0.00
+    action: "full_suspension"
+    reversible: false  # Full investigation

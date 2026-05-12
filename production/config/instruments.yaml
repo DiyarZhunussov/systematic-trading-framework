@@ -1,0 +1,204 @@
+# instruments.yaml
+# Per-instrument specifications, cost assumptions, and execution constraints
+# All effective cost figures are conservative (upper-mid range) per framework Section 2.1
+
+instruments:
+  EURUSD:
+    display_name: "EUR/USD"
+    asset_class: "forex"
+    session_focus: ["asian", "london", "london_ny_overlap"]
+    # Cost assumptions
+    headline_spread_pips: 0.7
+    effective_cost_pips: 2.0        # Conservative mid-range estimate
+    slippage_1sigma_pips: 0.5
+    news_spike_multiplier: 5.0      # Spread multiplier during news
+    # Execution
+    lot_size: 0.01                  # Minimum lot
+    point_value: 0.0001             # 1 point = 0.0001 price units
+    contract_size: 100000           # Standard lot
+    max_spread_points: 30           # 3.0 pips — reject if wider
+    # Data validation
+    max_bar_range: 0.0200           # 200 pips max range per bar (flash crash filter)
+    # Strategy parameters
+    mean_reversion_threshold: 2.0   # Z-score entry threshold
+    mean_reversion_window: 30       # Rolling window (periods)
+    trend_fast_ema: 20
+    trend_slow_ema: 100
+    donchian_period_daily: 20
+    donchian_period_4h: 60
+    atr_period: 20
+    breakout_confirm_bars: 5
+    breakout_lookback_bars: 10
+    time_stop_hours: 3              # Mean reversion max hold (hours)
+
+  GBPUSD:
+    display_name: "GBP/USD"
+    asset_class: "forex"
+    session_focus: ["london", "london_ny_overlap"]
+    headline_spread_pips: 1.5
+    effective_cost_pips: 3.0
+    slippage_1sigma_pips: 0.8
+    news_spike_multiplier: 6.5
+    lot_size: 0.01
+    point_value: 0.0001
+    contract_size: 100000
+    max_spread_points: 45           # 4.5 pips
+    max_bar_range: 0.0250
+    mean_reversion_threshold: 2.0
+    mean_reversion_window: 30
+    trend_fast_ema: 20
+    trend_slow_ema: 100
+    donchian_period_daily: 20
+    donchian_period_4h: 60
+    atr_period: 20
+    breakout_confirm_bars: 5
+    breakout_lookback_bars: 10
+    time_stop_hours: 3
+
+  USDJPY:
+    display_name: "USD/JPY"
+    asset_class: "forex"
+    session_focus: ["asian", "london_ny_overlap"]
+    headline_spread_pips: 1.0
+    effective_cost_pips: 2.5
+    slippage_1sigma_pips: 0.6
+    news_spike_multiplier: 4.0
+    lot_size: 0.01
+    point_value: 0.01               # JPY pairs: 1 point = 0.01
+    contract_size: 100000
+    max_spread_points: 35           # 3.5 pips
+    max_bar_range: 2.00             # 200 pips JPY
+    mean_reversion_threshold: 2.0
+    mean_reversion_window: 30
+    trend_fast_ema: 20
+    trend_slow_ema: 100
+    donchian_period_daily: 20
+    donchian_period_4h: 60
+    atr_period: 20
+    breakout_confirm_bars: 5
+    breakout_lookback_bars: 10
+    time_stop_hours: 3
+
+  XAUUSD:
+    display_name: "XAU/USD (Gold)"
+    asset_class: "commodity"
+    session_focus: ["london", "london_ny_overlap"]
+    headline_spread_usd: 0.40
+    effective_cost_usd: 1.50        # Mid-range effective cost
+    slippage_1sigma_usd: 0.50
+    news_spike_multiplier: 12.0     # Very high during risk events
+    lot_size: 0.01
+    point_value: 0.01
+    contract_size: 100              # 100 oz per lot
+    max_spread_points: 250          # $2.50
+    max_bar_range: 50.0             # $50 max range per bar
+    mean_reversion_threshold: 2.2   # Slightly wider — more volatile
+    mean_reversion_window: 25
+    trend_fast_ema: 20
+    trend_slow_ema: 100
+    donchian_period_daily: 20
+    donchian_period_4h: 60
+    atr_period: 20
+    breakout_confirm_bars: 6
+    breakout_lookback_bars: 12
+    time_stop_hours: 2              # Shorter hold — high vol
+
+  NQ100:
+    display_name: "NASDAQ 100"
+    asset_class: "index"
+    session_focus: ["london_ny_overlap", "ny_close"]
+    headline_spread_pts: 2.0
+    effective_cost_pts: 5.0
+    slippage_1sigma_pts: 1.5
+    news_spike_multiplier: 9.0
+    lot_size: 0.1
+    point_value: 1.0
+    contract_size: 1               # Per-point contract
+    max_spread_points: 80          # 8.0 pts
+    max_bar_range: 500.0
+    mean_reversion_threshold: 2.2
+    mean_reversion_window: 25
+    trend_fast_ema: 10
+    trend_slow_ema: 50
+    donchian_period_daily: 20
+    donchian_period_4h: 60
+    atr_period: 20
+    breakout_confirm_bars: 4
+    breakout_lookback_bars: 8
+    time_stop_hours: 1.5
+
+  SPX500:
+    display_name: "S&P 500"
+    asset_class: "index"
+    session_focus: ["london_ny_overlap", "ny_close"]
+    headline_spread_pts: 0.7
+    effective_cost_pts: 2.0
+    slippage_1sigma_pts: 0.8
+    news_spike_multiplier: 8.0
+    lot_size: 0.1
+    point_value: 1.0
+    contract_size: 1
+    max_spread_points: 30          # 3.0 pts
+    max_bar_range: 100.0
+    mean_reversion_threshold: 2.2
+    mean_reversion_window: 25
+    trend_fast_ema: 10
+    trend_slow_ema: 50
+    donchian_period_daily: 20
+    donchian_period_4h: 60
+    atr_period: 20
+    breakout_confirm_bars: 4
+    breakout_lookback_bars: 8
+    time_stop_hours: 1.5
+
+  DAX40:
+    display_name: "DAX 40"
+    asset_class: "index"
+    session_focus: ["london", "london_ny_overlap"]
+    headline_spread_pts: 2.5
+    effective_cost_pts: 7.0
+    slippage_1sigma_pts: 2.0
+    news_spike_multiplier: 6.5
+    lot_size: 0.1
+    point_value: 1.0
+    contract_size: 1
+    max_spread_points: 100         # 10.0 pts
+    max_bar_range: 500.0
+    mean_reversion_threshold: 2.2
+    mean_reversion_window: 25
+    trend_fast_ema: 10
+    trend_slow_ema: 50
+    donchian_period_daily: 20
+    donchian_period_4h: 60
+    atr_period: 20
+    breakout_confirm_bars: 6
+    breakout_lookback_bars: 12
+    time_stop_hours: 1.5
+
+# Minimum edge multiple: strategy gross edge must exceed (effective_cost * this factor)
+min_edge_cost_multiple: 3.0
+
+# Session schedule (UTC hours)
+sessions:
+  asian:
+    start: 0
+    end: 8
+    avoid_entry_near_open_minutes: 0
+  london_open:
+    start: 7
+    end: 9
+    avoid_entry_near_open_minutes: 30  # High gap risk
+  london_ny_overlap:
+    start: 13
+    end: 17
+    avoid_entry_near_open_minutes: 0   # Best liquidity window
+  ny_close:
+    start: 20
+    end: 22
+    avoid_entry_near_open_minutes: 0
+  rollover_avoid:
+    start: 21
+    end: 23                            # ±1h around 22:00 rollover
+
+# News blackout: avoid entry within this many minutes of high-impact news
+news_blackout_minutes: 30

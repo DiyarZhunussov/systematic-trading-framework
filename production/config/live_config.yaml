@@ -1,0 +1,120 @@
+# live_config.yaml
+# Production runtime configuration
+# Changes require: version control commit + human sign-off before deployment
+# NEVER modify this file directly on the VPS without staging validation first
+
+# ─────────────────────────────────────────────────────────────────────────────
+# MT5 CONNECTION
+# Credentials should be loaded from environment variables, not hardcoded here
+# Set: MT5_LOGIN, MT5_PASSWORD, MT5_SERVER as env vars on the VPS
+# ─────────────────────────────────────────────────────────────────────────────
+mt5:
+  path: "C:/Program Files/MetaTrader 5/terminal64.exe"  # Adjust per VPS install
+  login: "${MT5_LOGIN}"           # From environment variable
+  password: "${MT5_PASSWORD}"     # From environment variable
+  server: "${MT5_SERVER}"         # e.g. "ICMarkets-Demo" or "Pepperstone-Live"
+  magic_number: 20250101          # Unique identifier for this system's orders
+  max_retries: 3
+  retry_delay_seconds: 5
+  slippage_alert_threshold: 0.20  # Alert if recent slippage > 20% above baseline
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ACTIVE INSTRUMENTS
+# Comment out instruments to disable without removing config
+# ─────────────────────────────────────────────────────────────────────────────
+active_instruments:
+  - EURUSD
+  - GBPUSD
+  - USDJPY
+  - XAUUSD
+  - NQ100
+  - SPX500
+  - DAX40
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ACTIVE STRATEGIES
+# Controls which alpha engines are active at startup
+# Individual engines can be suspended via decay monitor without editing this file
+# ─────────────────────────────────────────────────────────────────────────────
+active_strategies:
+  mean_reversion: true
+  trend_following: true
+  volatility_breakout: true
+  regime_adaptation: true       # Always true — it's a meta-layer
+  statistical_arbitrage: false  # Zero allocation until validated (Section 3, Engine 5)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PRIMARY TIMEFRAMES
+# ─────────────────────────────────────────────────────────────────────────────
+timeframes:
+  mean_reversion: "M5"          # 5-minute bars (intraday)
+  trend_following: "D1"         # Daily bars
+  volatility_breakout: "H4"     # 4-hour bars
+  regime_detection: "D1"        # ADX on daily bars
+
+# ─────────────────────────────────────────────────────────────────────────────
+# REGIME DETECTION PARAMETERS
+# ─────────────────────────────────────────────────────────────────────────────
+regime:
+  adx_period: 14
+  adx_trending_threshold: 25.0
+  adx_choppy_threshold: 20.0
+  adx_transition_low: 20.0
+  adx_transition_high: 25.0
+  vol_percentile_low: 25          # Below P25 = low vol regime
+  vol_percentile_high: 75         # Above P75 = high vol regime
+  vol_percentile_crisis: 90       # Above P90 + multi-factor = crisis
+  vol_lookback_days: 252
+  regime_change_confirmation_days: 3  # Days before regime change is acted upon
+  # Crisis detection thresholds
+  crisis_equity_vol_ratio: 2.5    # Realized vol / 252-day median
+  crisis_fx_vol_zscore: 2.0       # Hourly ATR z-score
+  crisis_gold_return_sigma: 3.0   # XAU 24h absolute return
+  crisis_min_indicators: 2        # Minimum crisis indicators active
+  crisis_resolution_days: 3       # Days all indicators inactive before crisis resolved
+
+# ─────────────────────────────────────────────────────────────────────────────
+# BAYESIAN IC ESTIMATOR PRIORS
+# Revised per adversarial review (Section 6.2) — Beta(2,30) more sceptical
+# ─────────────────────────────────────────────────────────────────────────────
+bayesian:
+  ic_prior_alpha: 2               # Beta(2, 30) prior
+  ic_prior_beta: 30
+  uncertainty_aversion: 0.5       # Penalty for IC uncertainty in confidence weight
+  min_trades_for_confidence: 200  # Trades before posterior materially exceeds prior
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PORTFOLIO CONSTRUCTION
+# ─────────────────────────────────────────────────────────────────────────────
+portfolio:
+  rebalance_frequency_days: 30
+  erc_vol_lookback_days: 60
+  ewma_decay: 0.94                # ~30-day half-life for EWMA covariance
+  min_strategy_weight: 0.05
+  max_strategy_weight: 0.60
+  weight_change_threshold_pct: 0.10   # >10% change → phase over 3 days
+  diversification_ratio_warn: 1.20    # DR < 1.2 → review correlations
+
+# ─────────────────────────────────────────────────────────────────────────────
+# MONITORING & ALERTS
+# ─────────────────────────────────────────────────────────────────────────────
+monitoring:
+  telegram_bot_token: "${TELEGRAM_BOT_TOKEN}"   # From environment variable
+  telegram_chat_id: "${TELEGRAM_CHAT_ID}"       # From environment variable
+  alert_on_trade: true
+  alert_on_kill_switch: true
+  alert_on_decay_condition: true
+  alert_on_drawdown_threshold: true
+  performance_log_interval_minutes: 60
+  heartbeat_log_interval_seconds: 30
+
+# ─────────────────────────────────────────────────────────────────────────────
+# DEPLOYMENT METADATA
+# ─────────────────────────────────────────────────────────────────────────────
+deployment:
+  version: "1.0.0"
+  environment: "paper"          # Options: paper | live — must be changed manually
+  deployed_by: ""               # Required: human reviewer name
+  deployed_at: ""               # Required: ISO timestamp
+  framework_version: "2.0"
+  notes: ""
